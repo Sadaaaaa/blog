@@ -63,11 +63,7 @@ public class PostRepository {
             params.add(size);
             params.add(page * size);
         }
-        System.out.println("sql: " + sql);
-        List<Post> posts = jdbcTemplate.query(sql, postRowMapper, params.toArray());
-        System.out.println("посты: " + posts.stream().findFirst());
-
-        return posts;
+        return jdbcTemplate.query(sql, postRowMapper, params.toArray());
     }
 
     public Integer count(String tag) {

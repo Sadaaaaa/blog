@@ -30,5 +30,8 @@ public class Post {
         this.likes = likes;
         this.image = image;
     }
+
+    public Post(long id, String title, String text) {
+    }
 }
 

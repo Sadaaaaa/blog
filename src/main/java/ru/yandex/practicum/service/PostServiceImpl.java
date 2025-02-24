@@ -1,5 +1,6 @@
 package ru.yandex.practicum.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -13,25 +14,22 @@ import ru.yandex.practicum.repository.PostRepository;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+@Slf4j
 @Service
 public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
-    private final TagService tagService;
 
-    public PostServiceImpl(PostRepository postRepository, CommentRepository commentRepository, TagService tagService) {
+    public PostServiceImpl(PostRepository postRepository, CommentRepository commentRepository) {
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
-        this.tagService = tagService;
     }
 
     @Override
@@ -52,7 +50,6 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findById(id).orElseThrow();
 
         List<Comment> comments = commentRepository.findByPostId(id);
-        System.out.println("Комментарии к посту: ");
         comments.forEach(comment -> System.out.println(comment.getText()));
         post.setComments(comments);
 
@@ -62,15 +59,15 @@ public class PostServiceImpl implements PostService {
     @Override
     public Post addPost(String title, String text, List<String> tagList, MultipartFile image) throws IOException {
         Post post = new Post();
+        post.setTitle(title);
+        post.setText(text);
+        post.setTags(tagList);
+        post.setLikes(0);
 
         if (image != null && !image.isEmpty()) {
             post.setImage(image.getBytes());
         }
 
-        post.setLikes(0);
-        post.setTags(tagList);
-        post.setTitle(title);
-        post.setText(text);
         postRepository.update(post);
 
         return postRepository.saveAndReturn(post);
@@ -101,7 +98,7 @@ public class PostServiceImpl implements PostService {
     public void deletePost(Long id) {
         postRepository.delete(id);
         int amountDeletedComments = commentRepository.deleteAllByPostId(id);
-        System.out.println("Удалено комментариев: " + amountDeletedComments);
+        log.info("Удалено комментариев: {}", amountDeletedComments);
     }
 
     @Override
