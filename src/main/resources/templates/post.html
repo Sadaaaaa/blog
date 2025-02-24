@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${post.title}">Пост</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+        }
+
+        .tags span {
+            display: inline-block;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            padding: 3px 8px;
+            margin: 3px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .button {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            padding: 3px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+
+        .button:hover {
+            background: #e0e0e0;
+        }
+
+        .comments {
+            border-top: 1px solid #ccc;
+            margin-top: 20px;
+            padding-top: 10px;
+        }
+
+        .comment {
+            margin-bottom: 10px;
+        }
+
+        .edit-comment {
+            display: none;
+        }
+
+        .comment {
+            margin-bottom: 20px;
+            border: 1px solid #eee;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .comment-actions, .edit-actions {
+            margin-top: 5px;
+        }
+
+        .comment button {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            padding: 3px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+
+        .comment button:hover {
+            background: #e0e0e0;
+        }
+
+        .edit-mode textarea {
+            width: 100%;
+            min-height: 60px;
+            margin-bottom: 5px;
+        }
+
+        .image {
+            max-width: 100%;
+            height: auto;
+            max-height: 500px;
+        }
+
+        .edit-mode textarea {
+            width: 100%;
+            min-height: 60px;
+            margin-bottom: 5px;
+            white-space: pre-wrap;
+        }
+
+        .comment-text {
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+
+<h1 th:text="${post.title}">Название поста</h1>
+<img class="image" th:src="@{/posts/{id}/image(id=${post.id})}" alt="Изображение поста">
+
+<p th:each="paragraph : ${post.text.split('\n')}" th:text="${paragraph}" style="white-space: pre-wrap;"></p>
+
+<div class="tags">
+    <span th:each="tag : ${post.tags}" th:text="${tag}">Тег</span>
+</div>
+
+<button class="button" onclick="likePost()">❤️ Лайк (<span id="like-count" th:text="${post.likes}">0</span>)</button>
+<button class="button" onclick="editPost()">✏ Редактировать</button>
+<button class="button" onclick="deletePost()">🗑 Удалить</button>
+
+<!-- Форма редактирования (изначально скрыта) -->
+<div id="edit-form" style="display: none;">
+    <h2>Редактировать пост</h2>
+    <form action="/blog/posts/edit" method="post" enctype="multipart/form-data" onsubmit="prepareTags()">
+        <input type="hidden" name="id" th:value="${post.id}">
+        <label>Название:</label>
+        <input type="text" name="title" th:value="${post.title}" required><br>
+        <label>Текст:</label>
+        <textarea name="text" rows="4" required th:text="${post.text}"></textarea><br>
+
+        <!-- Поле для тегов -->
+        <label>Теги (через запятую):</label>
+        <input type="text" id="tags-input" th:value="${#strings.arrayJoin(post.tags, ', ')}"><br>
+        <input type="hidden" name="tags" id="tags-hidden">
+
+        <!-- Поле для загрузки изображения -->
+        <label>Изображение:</label>
+        <input type="file" name="image"><br>
+
+        <button type="submit">Сохранить</button>
+        <button type="button" onclick="cancelEdit()">Отмена</button>
+    </form>
+</div>
+
+<!-- Список комментариев -->
+<div class="comments">
+    <h3>Комментарии</h3>
+    <div th:each="comment : ${post.comments}" class="comment" th:id="'comment-' + ${comment.id}">
+        <!-- Режим просмотра -->
+        <div class="view-mode">
+            <p class="comment-text" th:utext="${comment.text}" th:onclick="'editCommentMode(' + ${comment.id} + ')'"></p>
+            <div class="comment-actions">
+                <button th:onclick="'editCommentMode(' + ${comment.id} + ')'">✏️ Редактировать</button>
+                <button th:onclick="'deleteComment(' + ${comment.id} + ')'">🗑 Удалить</button>
+            </div>
+        </div>
+
+        <!-- Режим редактирования (изначально скрыт) -->
+        <div class="edit-mode" style="display: none;">
+            <textarea th:id="'edit-text-' + ${comment.id}" th:text="${comment.text}"></textarea>
+            <div class="edit-actions">
+                <button th:onclick="'saveComment(' + ${comment.id} + ')'">💾 Сохранить</button>
+                <button th:onclick="'cancelEditComment(' + ${comment.id} + ')'">❌ Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Форма добавления комментария -->
+    <h4>Добавить комментарий:</h4>
+    <form action="/blog/comments" method="post">
+        <input type="hidden" name="postId" th:value="${post.id}">
+        <textarea name="text" rows="2" required></textarea><br>
+        <button type="submit">Добавить</button>
+    </form>
+</div>
+
+<script>
+    function likePost() {
+        let count = document.getElementById('like-count');
+        let newLikes = parseInt(count.textContent) + 1;
+        count.textContent = newLikes;
+
+        fetch('/blog/posts/like/' + [[${post.id}]], {method: 'POST'});
+    }
+
+    function editPost() {
+        document.getElementById('edit-form').style.display = 'block';
+    }
+
+    // отмена сохранения поста
+    function cancelEdit() {
+        let editForm = document.getElementById('edit-form');
+        editForm.style.display = 'none';
+
+        // Восстанавливаем старый текст
+        let inputTitle = editForm.querySelector('input[name="title"]');
+        let inputText = editForm.querySelector('textarea[name="text"]');
+
+        inputTitle.value = inputTitle.defaultValue; // Возвращает исходное значение
+        inputText.value = inputText.defaultValue;
+    }
+
+    function deletePost() {
+        if (confirm('Удалить этот пост?')) {
+            fetch('/blog/posts/delete/' + [[${post.id}]], {method: 'POST'})
+                .then(() => window.location.href = '/blog/posts');
+        }
+    }
+
+    function editComment(element, id) {
+        element.style.display = 'none';
+        document.getElementById('edit-comment-' + id).style.display = 'block';
+    }
+
+    function saveComment(event, input, id) {
+        if (event.ctrlKey && event.key === 'Enter') {
+            let text = input.value;
+            fetch('/blog/comments/edit/' + id, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({text})
+            }).then(() => location.reload());
+        }
+    }
+
+    // -------- ТЕГИ --------
+    // Подготовка тегов для отправки
+    function prepareTags() {
+        let tagsInput = document.getElementById('tags-input');
+        let tagsHidden = document.getElementById('tags-hidden');
+
+        let tagsArray = tagsInput.value
+            .split(',')
+            .map(tag => tag.trim()) // Убираем пробелы
+            .filter(tag => tag.length > 0); // Убираем пустые строки
+
+        tagsHidden.value = JSON.stringify(tagsArray); // Отправляем JSON
+    }
+
+    // -------- КОММЕНТАРИИ --------
+    function deleteComment(id) {
+        if (confirm('Удалить этот комментарий?')) {
+            fetch('/blog/comments/delete/' + id, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+            }).then(response => {
+                if (response.ok) {
+                    // Находим и удаляем комментарий из DOM
+                    let commentElement = document.getElementById('comment-' + id);
+                    if (commentElement) {
+                        commentElement.remove();
+                    } else {
+                        console.error("Элемент комментария не найден в DOM");
+                    }
+                } else {
+                    alert("Ошибка удаления комментария");
+                }
+            }).catch(error => {
+                console.error("Ошибка:", error);
+                alert("Ошибка при удалении комментария");
+            });
+        }
+    }
+
+    function editCommentMode(id) {
+        const commentElement = document.getElementById('comment-' + id);
+        const viewMode = commentElement.querySelector('.view-mode');
+        const editMode = commentElement.querySelector('.edit-mode');
+
+        // Показываем режим редактирования, скрываем обычный режим
+        viewMode.style.display = 'none';
+        editMode.style.display = 'block';
+
+        // Автофокус на textarea
+        const editTextarea = document.getElementById('edit-text-' + id);
+        editTextarea.addEventListener('keydown', (event) => handleCommentKeyPress(event, id));
+        editTextarea.focus();
+    }
+
+    // Сохранение отредактированного комментария
+    function saveComment(id) {
+        const commentElement = document.getElementById('comment-' + id);
+        const editTextarea = document.getElementById('edit-text-' + id);
+        const text = editTextarea.value;
+
+        fetch('/blog/comments/edit/' + id, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({text})
+        }).then(response => {
+            if (response.ok) {
+                // Обновляем текст комментария без перезагрузки страницы
+                const viewModeText = commentElement.querySelector('.view-mode p');
+                viewModeText.textContent = text;
+
+                // Возвращаемся в режим просмотра
+                cancelEditComment(id);
+            } else {
+                alert('Произошла ошибка при сохранении комментария');
+            }
+        }).catch(error => {
+            console.error('Ошибка:', error);
+            alert('Произошла ошибка при сохранении комментария');
+        });
+    }
+
+    // Отмена редактирования
+    function cancelEditComment(id) {
+        const commentElement = document.getElementById('comment-' + id);
+        const viewMode = commentElement.querySelector('.view-mode');
+        const editMode = commentElement.querySelector('.edit-mode');
+
+        // Возвращаем исходный текст в textarea (отменяем изменения)
+        const viewModeText = commentElement.querySelector('.view-mode p').textContent;
+        const editTextarea = document.getElementById('edit-text-' + id);
+        editTextarea.value = viewModeText;
+
+        // Переключаем режимы отображения
+        viewMode.style.display = 'block';
+        editMode.style.display = 'none';
+    }
+
+    // Сохранение комментария по Ctrl+Enter
+    function handleCommentKeyPress(event, id) {
+        if (event.ctrlKey && event.key === 'Enter') {
+            saveComment(id);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const commentForm = document.querySelector('form[action="/blog/comments"]');
+        const commentTextarea = commentForm.querySelector('textarea[name="text"]');
+
+        if (commentTextarea) {
+            commentTextarea.addEventListener("keydown", function (event) {
+                if (event.ctrlKey && event.key === "Enter") {
+                    event.preventDefault(); // Предотвращаем стандартное поведение
+                    commentForm.submit();
+                }
+            });
+        }
+    });
+</script>
+
+</body>
+</html>

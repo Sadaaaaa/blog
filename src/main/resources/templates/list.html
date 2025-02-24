@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Лента постов</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+        }
+
+        .post {
+            border-bottom: 1px solid #ccc;
+            padding: 10px 0;
+        }
+
+        .post img {
+            max-width: 100%;
+            height: auto;
+            max-height: 200px;
+        }
+
+        .tags span {
+            display: inline-block;
+            background: #0073e6;
+            color: white;
+            padding: 3px 8px;
+            margin: 3px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .pagination a {
+            margin: 0 5px;
+            text-decoration: none;
+            color: #0073e6;
+        }
+
+        .pagination a.active {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        .add-post-btn {
+            background: #0073e6;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            width: 400px;
+        }
+
+        .close-btn {
+            float: right;
+            cursor: pointer;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Лента постов</h1>
+
+<!-- Кнопка добавления поста -->
+<button class="add-post-btn" type="button" onclick="openModal()">Добавить пост</button>
+
+<form action="/blog/posts" method="get">
+    <label for="size">Показывать на странице:</label>
+    <select name="size" id="size">
+        <option value="10" th:selected="${size == 10}">10</option>
+        <option value="20" th:selected="${size == 20}">20</option>
+        <option value="50" th:selected="${size == 50}">50</option>
+    </select>
+    <button type="submit">Изменить</button>
+</form>
+
+<!-- Фильтрация по тегу -->
+<form action="/blog/posts" method="get">
+    <label for="tag">Фильтр по тегу:</label>
+    <select name="tag" id="tag">
+        <option value="">Все</option>
+        <option th:each="tag : ${tags}"
+                th:value="${tag}"
+                th:text="${tag}"
+                th:selected="${tag == selectedTag}">
+        </option>
+    </select>
+    <button type="submit">Фильтровать</button>
+</form>
+
+<!-- Лента постов -->
+<div th:each="post : ${posts}" class="post">
+    <h2><a th:href="@{/posts/{id}(id=${post.id})}" th:text="${post.title}">Название поста</a></h2>
+    <img th:src="@{/posts/{id}/image(id=${post.id})}" alt="Превью поста">
+    <p class="short-description" th:text="${post.text}"></p>
+
+    <p>❤️ <span th:text="${post.likes}">0</span> | 💬 <span th:text="${#lists.size(post.comments)}">0</span>
+
+    <div class="tags">
+        <span th:each="tag : ${post.tags}" th:text="${tag}">Тег</span>
+    </div>
+</div>
+
+<!-- Пагинация -->
+<div class="pagination">
+    <a th:each="page : ${#numbers.sequence(0, totalPages - 1)}"
+       th:href="@{/posts(page=${page}, size=${size}, tag=${selectedTag})}"
+       th:text="${page + 1}"
+       th:classappend="${page == currentPage} ? 'active' : ''"></a>
+</div>
+
+<!-- Модальное окно добавления поста -->
+<div id="addPostModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">×</span>
+        <h2>Добавить пост</h2>
+        <form action="/blog/posts/add" method="post" enctype="multipart/form-data">
+            <label>Название:</label>
+            <input type="text" name="title" required><br>
+
+            <label>Картинка:</label>
+            <input type="file" name="image" accept="image/*" required><br>
+
+            <label>Текст поста:</label>
+            <textarea name="text" rows="4" required></textarea><br>
+
+            <label>Теги (через запятую):</label>
+            <input type="text" name="tags"><br>
+
+            <button type="submit">Опубликовать</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openModal() {
+        document.getElementById('addPostModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('addPostModal').style.display = 'none';
+    }
+
+    // сокращаем текст поста до 100 символов для превью
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".short-description").forEach(function (element) {
+            let fullText = element.textContent.trim();
+            if (fullText.length > 100) {
+                element.textContent = fullText.substring(0, 100) + "...";
+            }
+        });
+    });
+
+    // Грузим теги в выпадающий список
+    document.addEventListener("DOMContentLoaded", function () {
+        const contextPath = window.location.pathname.split('/')[1];  // Определяем "blog"
+        fetch('/blog/api/tags', {
+            headers: {'Accept': 'application/json'}
+        })
+            .then(response => response.json())
+            .then(tags => {
+                const tagSelect = document.getElementById("tag");
+                if (!tagSelect) {
+                    console.error("Ошибка: элемент #tag не найден!");
+                    return;
+                }
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const selectedTag = urlParams.get('tag');
+
+                tags.forEach(tag => {
+                    const option = document.createElement("option");
+                    option.value = tag;
+                    option.textContent = tag;
+                    if (tag === selectedTag) {
+                        option.selected = true;
+                    }
+                    tagSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error("Ошибка загрузки тегов:", error));
+    });
+
+</script>
+
+</body>
+</html>
