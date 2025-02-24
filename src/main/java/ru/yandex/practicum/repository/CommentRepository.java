@@ -54,13 +54,13 @@ public class CommentRepository {
         return this.findById(comment.getId()).orElseThrow();
     }
 
-    // Удаление комментария
+    // Удаление комментария по id
     public void delete(Long id) {
         String sql = "DELETE FROM comments WHERE id = ?";
         jdbcTemplate.update(sql, id);
     }
 
-    // Удаление комментария
+    // Удаление комментария по id поста
     public int deleteAllByPostId(Long postId) {
         String sql = "DELETE FROM comments WHERE post_id = ?";
         return jdbcTemplate.update(sql, postId);

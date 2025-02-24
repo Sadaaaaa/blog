@@ -139,7 +139,6 @@
 <!-- Список комментариев -->
 <div class="comments">
     <h3>Комментарии</h3>
-
     <div th:each="comment : ${post.comments}" class="comment" th:id="'comment-' + ${comment.id}">
         <!-- Режим просмотра -->
         <div class="view-mode">
@@ -184,8 +183,6 @@
 
     // отмена сохранения поста
     function cancelEdit() {
-        // document.getElementById('edit-form').style.display = 'none';
-
         let editForm = document.getElementById('edit-form');
         editForm.style.display = 'none';
 
@@ -258,20 +255,6 @@
             });
         }
     }
-
-    // Переключение в режим редактирования
-    // function editCommentMode(id) {
-    //     const commentElement = document.getElementById('comment-' + id);
-    //     const viewMode = commentElement.querySelector('.view-mode');
-    //     const editMode = commentElement.querySelector('.edit-mode');
-    //
-    //     viewMode.style.display = 'none';
-    //     editMode.style.display = 'block';
-    //
-    //     // Добавляем обработчик Ctrl+Enter для сохранения комментария
-    //     const editTextarea = document.getElementById('edit-text-' + id);
-    //     editTextarea.addEventListener('keydown', (event) => handleCommentKeyPress(event, id));
-    // }
 
     function editCommentMode(id) {
         const commentElement = document.getElementById('comment-' + id);

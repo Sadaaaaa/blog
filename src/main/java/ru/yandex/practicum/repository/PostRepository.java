@@ -3,16 +3,11 @@ package ru.yandex.practicum.repository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.model.Post;
 
-import java.sql.PreparedStatement;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -53,7 +48,7 @@ public class PostRepository {
             params.add(page * size);
         } else {
             // Построение запроса напрямую с экранированием значения тега
-            String escapedTag = tag.replace("'", "''"); // Базовое экранирование апострофов
+            String escapedTag = tag.replace("'", "''");
             sql = "SELECT * FROM posts WHERE " +
                     "tags = '" + escapedTag + "' OR " +
                     "tags LIKE '" + escapedTag + ",%' OR " +
@@ -73,8 +68,7 @@ public class PostRepository {
             sql = "SELECT COUNT(*) FROM posts";
             return jdbcTemplate.queryForObject(sql, Integer.class);
         } else {
-            // Построение запроса напрямую с экранированием значения тега
-            String escapedTag = tag.replace("'", "''"); // Базовое экранирование апострофов
+            String escapedTag = tag.replace("'", "''");
             sql = "SELECT COUNT(*) FROM posts WHERE " +
                     "tags = '" + escapedTag + "' OR " +
                     "tags LIKE '" + escapedTag + ",%' OR " +

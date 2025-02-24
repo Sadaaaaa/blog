@@ -7,8 +7,8 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 @Configuration
 @EnableWebMvc
-@ComponentScan(basePackages = {"ru.yandex.practicum"}) // Сканирование пакетов
-@PropertySource("classpath:application.properties") // Для считывания application.properties
+@ComponentScan(basePackages = {"ru.yandex.practicum"})
+@PropertySource("classpath:application.properties")
 public class WebConfiguration {
 
 }

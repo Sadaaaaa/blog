@@ -16,7 +16,6 @@ import javax.sql.DataSource;
 @Configuration
 public class DataSourceConfiguration {
 
-    // Настройка DataSource — компонент, отвечающий за соединение с базой данных
     @Bean
     public DataSource dataSource(
             // Настройки соединения возьмём из Environment
@@ -33,13 +32,11 @@ public class DataSourceConfiguration {
         return dataSource;
     }
 
-    // JdbcTemplate — компонент для выполнения запросов
     @Bean
     public JdbcTemplate jdbcTemplate(DataSource dataSource) {
         return new JdbcTemplate(dataSource);
     }
 
-    // После инициализации контекста выполняем наполнение схемы базы данных
     @EventListener
     public void populate(ContextRefreshedEvent event) {
         DataSource dataSource = event.getApplicationContext().getBean(DataSource.class);

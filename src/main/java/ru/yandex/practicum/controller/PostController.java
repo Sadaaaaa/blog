@@ -49,6 +49,7 @@ public class PostController {
         return "list";
     }
 
+    // Получение картинки поста
     @GetMapping("/{id}/image")
     public ResponseEntity<byte[]> getPostImage(@PathVariable Long id) {
         byte[] image = postService.getImageByPostId(id);
@@ -56,7 +57,7 @@ public class PostController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_TYPE, "image/jpeg") // Или другой тип (image/png)
+                .header(HttpHeaders.CONTENT_TYPE, "image/jpeg")
                 .body(image);
     }
 
@@ -75,7 +76,7 @@ public class PostController {
         }
         model.addAttribute("base64Image", base64Image);
 
-        return "post"; // post.html
+        return "post";
     }
 
     // Добавление поста
@@ -88,7 +89,6 @@ public class PostController {
 
         List<String> tagList = new ArrayList<>();
         if (tags != null && !tags.isEmpty()) {
-            // Удаляем все пробелы и разделяем по запятой
             tagList = Arrays.asList(tags.replaceAll("\\s", "").split(","));
         }
 
@@ -108,14 +108,12 @@ public class PostController {
             return "redirect:/posts?error=missing_id";
         }
 
-        // Проверяем и обрабатываем теги
         List<String> tagList = new ArrayList<>();
         if (tags != null && !tags.isEmpty()) {
             tagList = new Gson().fromJson(tags, new TypeToken<List<String>>() {
             }.getType());
         }
 
-        // Обновление поста
         postService.updatePost(id, title, text, tagList, image);
         return "redirect:/posts/" + id;
     }
