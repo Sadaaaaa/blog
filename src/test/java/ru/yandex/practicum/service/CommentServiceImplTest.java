@@ -2,10 +2,9 @@ package ru.yandex.practicum.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import ru.yandex.practicum.model.Comment;
 import ru.yandex.practicum.repository.CommentRepository;
 
@@ -13,17 +12,20 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
 class CommentServiceImplTest {
-    @Mock
-    private CommentRepository commentRepository;
-
-    @InjectMocks
+    @Autowired
     private CommentServiceImpl commentService;
+
+    @MockitoBean
+    private CommentRepository commentRepository;
 
     private Comment testComment;
     private final Long TEST_POST_ID = 1L;
@@ -97,7 +99,6 @@ class CommentServiceImplTest {
 
         when(commentRepository.findById(TEST_COMMENT_ID)).thenReturn(Optional.of(existingComment));
         when(commentRepository.update(any(Comment.class))).thenReturn(updatedComment);
-
 
 
         Optional<Comment> result = commentService.updateComment(TEST_COMMENT_ID, updateRequest);

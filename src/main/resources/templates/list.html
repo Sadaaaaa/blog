@@ -84,7 +84,7 @@
 <!-- Кнопка добавления поста -->
 <button class="add-post-btn" type="button" onclick="openModal()">Добавить пост</button>
 
-<form action="/blog/posts" method="get">
+<form action="/posts" method="get">
     <label for="size">Показывать на странице:</label>
     <select name="size" id="size">
         <option value="10" th:selected="${size == 10}">10</option>
@@ -95,7 +95,7 @@
 </form>
 
 <!-- Фильтрация по тегу -->
-<form action="/blog/posts" method="get">
+<form action="/posts" method="get">
     <label for="tag">Фильтр по тегу:</label>
     <select name="tag" id="tag">
         <option value="">Все</option>
@@ -134,7 +134,7 @@
     <div class="modal-content">
         <span class="close-btn" onclick="closeModal()">×</span>
         <h2>Добавить пост</h2>
-        <form action="/blog/posts/add" method="post" enctype="multipart/form-data">
+        <form action="/posts/add" method="post" enctype="multipart/form-data">
             <label>Название:</label>
             <input type="text" name="title" required><br>
 
@@ -174,7 +174,7 @@
     // Грузим теги в выпадающий список
     document.addEventListener("DOMContentLoaded", function () {
         const contextPath = window.location.pathname.split('/')[1];  // Определяем "blog"
-        fetch('/blog/api/tags', {
+        fetch('/api/tags', {
             headers: {'Accept': 'application/json'}
         })
             .then(response => response.json())

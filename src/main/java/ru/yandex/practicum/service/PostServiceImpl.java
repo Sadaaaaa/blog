@@ -50,7 +50,6 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findById(id).orElseThrow();
 
         List<Comment> comments = commentRepository.findByPostId(id);
-        comments.forEach(comment -> System.out.println(comment.getText()));
         post.setComments(comments);
 
         return post;

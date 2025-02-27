@@ -123,7 +123,7 @@ public class PostController {
     @PostMapping("/delete/{id}")
     public String deletePost(@PathVariable Long id) {
         postService.deletePost(id);
-        return "redirect:/blog/posts";
+        return "redirect:/posts";
     }
 
     // Лайк поста

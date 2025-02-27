@@ -2,11 +2,10 @@ package ru.yandex.practicum.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import ru.yandex.practicum.model.Comment;
 import ru.yandex.practicum.model.Post;
 import ru.yandex.practicum.repository.CommentRepository;
@@ -17,26 +16,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
 public class PostServiceImplTest {
 
-    @Mock
+    @Autowired
+    private PostServiceImpl postService;
+
+    @MockitoBean
     private PostRepository postRepository;
 
-    @Mock
+    @MockitoBean
     private CommentRepository commentRepository;
-
-    @InjectMocks
-    private PostServiceImpl postService;
 
     private Post testPost;
 
