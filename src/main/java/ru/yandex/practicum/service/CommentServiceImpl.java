@@ -36,8 +36,8 @@ public class CommentServiceImpl implements CommentService {
         if (existingComment.isPresent()) {
             Comment updated = existingComment.get();
             updated.setText(comment.getText());
-            Comment saved = commentRepository.update(updated);
-            return Optional.of(saved);
+            commentRepository.update(updated);
+            return this.findById(updated.getId());
         }
         return Optional.empty();
     }
@@ -47,7 +47,7 @@ public class CommentServiceImpl implements CommentService {
         Optional<Comment> comment = commentRepository.findById(commentId);
 
         if (comment.isPresent()) {
-            commentRepository.delete(commentId);
+            commentRepository.deleteById(commentId);
             return true;
         }
         return false;

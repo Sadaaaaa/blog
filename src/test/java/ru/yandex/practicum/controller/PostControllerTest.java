@@ -3,20 +3,20 @@ package ru.yandex.practicum.controller;
 import com.google.gson.Gson;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.ui.Model;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import ru.yandex.practicum.model.Post;
 import ru.yandex.practicum.service.PostService;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -29,21 +29,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(MockitoExtension.class)
+
+@WebMvcTest(PostController.class)
 public class PostControllerTest {
 
+    @Autowired
     private MockMvc mockMvc;
 
-    @Mock
+    @MockitoBean
     private PostService postService;
 
-    @Mock
-    private Model model;
-
-    @InjectMocks
-    private PostController postController;
-
-    private Gson gson;
+    private Gson gson = new Gson();
     private Post post1;
     private Post post2;
     private List<Post> posts;
@@ -51,20 +47,22 @@ public class PostControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(postController).build();
         gson = new Gson();
+
 
         post1 = new Post();
         post1.setId(1L);
         post1.setTitle("Test Post 1");
         post1.setText("Test content 1");
         post1.setTags(Arrays.asList("java", "spring"));
+        post1.setComments(new ArrayList<>());
 
         post2 = new Post();
         post2.setId(2L);
         post2.setTitle("Test Post 2");
         post2.setText("Test content 2");
         post2.setTags(Arrays.asList("junit", "mockito"));
+        post2.setComments(new ArrayList<>());
 
         posts = Arrays.asList(post1, post2);
 
@@ -201,7 +199,7 @@ public class PostControllerTest {
     void testDeletePost() throws Exception {
         mockMvc.perform(post("/posts/delete/1"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/blog/posts"));
+                .andExpect(redirectedUrl("/posts"));
 
         verify(postService).deletePost(1L);
     }
@@ -212,5 +210,18 @@ public class PostControllerTest {
                 .andExpect(status().isOk());
 
         verify(postService).likePost(1L);
+    }
+
+    @Test
+    void getAllTags_ShouldReturnTagsList() throws Exception {
+        List<String> tags = Arrays.asList("Java", "Spring", "JUnit");
+        when(postService.getAllTags()).thenReturn(tags);
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/posts/tags"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$").isArray())
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0]").value("Java"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[1]").value("Spring"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[2]").value("JUnit"));
     }
 }

@@ -29,9 +29,7 @@ public class CommentController {
     // Получение всех комментариев к посту
     @GetMapping("/post/{postId}")
     public ResponseEntity<List<Comment>> getCommentsByPostId(@PathVariable("postId") Long postId) {
-        System.out.println("Получение комментариев для postId: " + postId);
         List<Comment> comments = commentService.findByPostId(postId);
-        System.out.println("Найдено комментариев: " + comments.size());
         return ResponseEntity.ok(comments);
     }
 
@@ -51,7 +49,7 @@ public class CommentController {
         commentService.addComment(postId, comment);
 
         return ResponseEntity.status(HttpStatus.FOUND)
-                .header(HttpHeaders.LOCATION, "/blog/posts/" + postId)
+                .header(HttpHeaders.LOCATION, "/posts/" + postId)
                 .build();
     }
 

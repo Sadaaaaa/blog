@@ -2,41 +2,46 @@ package ru.yandex.practicum.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import ru.yandex.practicum.model.Comment;
 import ru.yandex.practicum.model.Post;
 import ru.yandex.practicum.repository.CommentRepository;
+import ru.yandex.practicum.repository.NativeQueryRepository;
 import ru.yandex.practicum.repository.PostRepository;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
 public class PostServiceImplTest {
 
-    @Mock
+    @Autowired
+    private PostServiceImpl postService;
+
+    @MockitoBean
     private PostRepository postRepository;
 
-    @Mock
+    @MockitoBean
     private CommentRepository commentRepository;
 
-    @InjectMocks
-    private PostServiceImpl postService;
+    @MockitoBean
+    private NativeQueryRepository nativeQueryRepository;
 
     private Post testPost;
 
@@ -55,7 +60,7 @@ public class PostServiceImplTest {
         List<Post> posts = List.of(testPost);
         when(postRepository.count(null)).thenReturn(1);
         when(postRepository.findAll(0, 10, null)).thenReturn(posts);
-        when(commentRepository.getAllCommentsByPostIds(anyList())).thenReturn(new HashMap<>());
+        when(commentRepository.getAllCommentsByPostIds(anyList())).thenReturn(new ArrayList<>());
 
         Page<Post> result = postService.getAllPosts(0, 10, null);
 
@@ -93,7 +98,7 @@ public class PostServiceImplTest {
     @Test
     public void addPost_ShouldCreateAndReturnNewPost() throws IOException {
         doNothing().when(postRepository).update(any(Post.class));
-        when(postRepository.saveAndReturn(any(Post.class))).thenReturn(testPost);
+        when(postRepository.save(any(Post.class))).thenReturn(testPost);
 
 
         Post savedPost = postService.addPost("New Title", "Text", List.of("tag1"), null);
@@ -102,9 +107,6 @@ public class PostServiceImplTest {
         assertEquals(1L, savedPost.getId().longValue());
         assertEquals(List.of("tag1"), savedPost.getTags());
         assertEquals(0, savedPost.getLikes());
-
-        verify(postRepository).update(any(Post.class));
-        verify(postRepository).saveAndReturn(any(Post.class));
     }
 
     @Test
@@ -123,7 +125,7 @@ public class PostServiceImplTest {
 
         postService.deletePost(1L);
 
-        verify(postRepository).delete(1L);
+        verify(postRepository).deleteById(1L);
         verify(commentRepository).deleteAllByPostId(1L);
     }
 
@@ -141,12 +143,73 @@ public class PostServiceImplTest {
     @Test
     public void getImageByPostId_ShouldReturnPostImage() {
         byte[] imageData = new byte[]{1, 2, 3};
-        when(postRepository.findImageByPostId(1L)).thenReturn(imageData);
+        when(nativeQueryRepository.findImageByPostId(1L)).thenReturn(imageData);
 
         byte[] result = postService.getImageByPostId(1L);
 
         assertArrayEquals(imageData, result);
-        verify(postRepository).findImageByPostId(1L);
+        verify(nativeQueryRepository).findImageByPostId(1L);
+    }
+
+    @Test
+    void getAllTags_WhenTagsExist_ShouldReturnUniqueTagsList() {
+        List<String> rawTags = Arrays.asList(
+                "java,spring,hibernate",
+                "spring,junit,java",
+                "docker,java"
+        );
+        when(postRepository.findAllTags()).thenReturn(rawTags);
+
+        List<String> result = postService.getAllTags();
+
+        assertNotNull(result);
+        assertEquals(5, result.size());
+        assertTrue(result.containsAll(Arrays.asList("java", "spring", "hibernate", "junit", "docker")));
+        verify(postRepository).findAllTags();
+    }
+
+    @Test
+    void getAllTags_WhenEmptyTags_ShouldReturnEmptyList() {
+        List<String> emptyTags = Arrays.asList("");
+        when(postRepository.findAllTags()).thenReturn(emptyTags);
+
+        List<String> result = postService.getAllTags();
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(postRepository).findAllTags();
+    }
+
+    @Test
+    void getAllTags_WhenNullTags_ShouldReturnEmptyList() {
+        List<String> tagsWithNull = Arrays.asList(null, "java,spring", null);
+        when(postRepository.findAllTags()).thenReturn(tagsWithNull);
+
+        List<String> result = postService.getAllTags();
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertTrue(result.containsAll(Arrays.asList("java", "spring")));
+        verify(postRepository).findAllTags();
+    }
+
+    @Test
+    void getAllTags_WhenMixedTags_ShouldReturnUniqueNonEmptyTags() {
+        List<String> mixedTags = Arrays.asList(
+                "java,spring",
+                "",
+                null,
+                "spring,java,junit",
+                "  "
+        );
+        when(postRepository.findAllTags()).thenReturn(mixedTags);
+
+        List<String> result = postService.getAllTags();
+
+        assertNotNull(result);
+        assertEquals(3, result.size());
+        assertTrue(result.containsAll(Arrays.asList("java", "spring", "junit")));
+        verify(postRepository).findAllTags();
     }
 }
 

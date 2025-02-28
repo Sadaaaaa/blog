@@ -2,18 +2,15 @@ package ru.yandex.practicum.controller;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import ru.yandex.practicum.model.Comment;
 import ru.yandex.practicum.service.CommentService;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -33,16 +30,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(MockitoExtension.class)
+@WebMvcTest(CommentController.class)
 public class CommentControllerTest {
-
+    @Autowired
     private MockMvc mockMvc;
 
-    @Mock
+    @MockitoBean
     private CommentService commentService;
-
-    @InjectMocks
-    private CommentController commentController;
 
     private Comment comment1;
     private Comment comment2;
@@ -50,10 +44,6 @@ public class CommentControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(commentController)
-                .defaultResponseCharacterEncoding(StandardCharsets.UTF_8)
-                .build();
-
         comment1 = new Comment();
         comment1.setId(1L);
         comment1.setPostId(1L);
@@ -127,7 +117,7 @@ public class CommentControllerTest {
                         .param("postId", "1")
                         .param("text", "New comment"))
                 .andExpect(status().isFound())
-                .andExpect(header().string(HttpHeaders.LOCATION, "/blog/posts/1"));
+                .andExpect(header().string(HttpHeaders.LOCATION, "/posts/1"));
 
         verify(commentService).addComment(eq(1L), argThat(comment ->
                 "New comment".equals(comment.getText())));

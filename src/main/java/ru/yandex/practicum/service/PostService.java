@@ -21,4 +21,6 @@ public interface PostService {
     void likePost(Long id);
 
     byte[] getImageByPostId(Long id);
+
+    List<String> getAllTags();
 }
