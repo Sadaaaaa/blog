@@ -11,6 +11,8 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import ru.yandex.practicum.model.Post;
 import ru.yandex.practicum.service.PostService;
 
@@ -208,5 +210,18 @@ public class PostControllerTest {
                 .andExpect(status().isOk());
 
         verify(postService).likePost(1L);
+    }
+
+    @Test
+    void getAllTags_ShouldReturnTagsList() throws Exception {
+        List<String> tags = Arrays.asList("Java", "Spring", "JUnit");
+        when(postService.getAllTags()).thenReturn(tags);
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/posts/tags"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$").isArray())
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0]").value("Java"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[1]").value("Spring"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[2]").value("JUnit"));
     }
 }

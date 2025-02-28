@@ -173,8 +173,7 @@
 
     // Грузим теги в выпадающий список
     document.addEventListener("DOMContentLoaded", function () {
-        const contextPath = window.location.pathname.split('/')[1];  // Определяем "blog"
-        fetch('/api/tags', {
+        fetch('/posts/tags', {
             headers: {'Accept': 'application/json'}
         })
             .then(response => response.json())

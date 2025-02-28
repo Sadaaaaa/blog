@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import ru.yandex.practicum.model.Comment;
 import ru.yandex.practicum.repository.CommentRepository;
 
@@ -16,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
@@ -24,7 +24,7 @@ class CommentServiceImplTest {
     @Autowired
     private CommentServiceImpl commentService;
 
-    @MockitoBean
+    @MockitoSpyBean
     private CommentRepository commentRepository;
 
     private Comment testComment;
@@ -33,6 +33,7 @@ class CommentServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        commentRepository.deleteAll();
         testComment = new Comment();
         testComment.setId(TEST_COMMENT_ID);
         testComment.setPostId(TEST_POST_ID);
@@ -86,27 +87,25 @@ class CommentServiceImplTest {
 
     @Test
     void updateComment_WhenCommentExists_ShouldUpdateAndReturnComment() {
+        // 1. Создаем и сохраняем комментарий в базу
+        Comment existingComment = new Comment(null, 1L, "Original text");
+        existingComment = commentRepository.save(existingComment);
+
+        // 2. Создаем объект с обновленным текстом
         Comment updateRequest = new Comment();
         updateRequest.setText("Updated text");
 
-        Comment existingComment = new Comment();
-        existingComment.setId(TEST_COMMENT_ID);
-        existingComment.setText("Original text");
+        // 3. Вызываем обновление
+        Optional<Comment> result = commentService.updateComment(existingComment.getId(), updateRequest);
 
-        Comment updatedComment = new Comment();
-        updatedComment.setId(TEST_COMMENT_ID);
-        updatedComment.setText("Updated text");
-
-        when(commentRepository.findById(TEST_COMMENT_ID)).thenReturn(Optional.of(existingComment));
-        when(commentRepository.update(any(Comment.class))).thenReturn(updatedComment);
-
-
-        Optional<Comment> result = commentService.updateComment(TEST_COMMENT_ID, updateRequest);
-
+        // 4. Проверяем результат
         assertTrue(result.isPresent());
         assertEquals("Updated text", result.get().getText());
-        verify(commentRepository).findById(TEST_COMMENT_ID);
-        verify(commentRepository).update(any(Comment.class));
+
+        // 5. Проверяем, что в БД обновился именно этот комментарий
+        Optional<Comment> updatedComment = commentRepository.findById(existingComment.getId());
+        assertTrue(updatedComment.isPresent());
+        assertEquals("Updated text", updatedComment.get().getText());
     }
 
     @Test
@@ -114,26 +113,21 @@ class CommentServiceImplTest {
         Comment updateRequest = new Comment();
         updateRequest.setText("Updated text");
 
-        when(commentRepository.findById(TEST_COMMENT_ID)).thenReturn(Optional.empty());
+        Optional<Comment> result = commentService.updateComment(999L, updateRequest);
 
-
-        Optional<Comment> result = commentService.updateComment(TEST_COMMENT_ID, updateRequest);
-
-        assertFalse(result.isPresent());
-        verify(commentRepository).findById(TEST_COMMENT_ID);
-        verify(commentRepository, never()).update(any(Comment.class));
+        assertTrue(result.isEmpty());
     }
 
     @Test
     void deleteComment_WhenCommentExists_ShouldReturnTrue() {
         when(commentRepository.findById(TEST_COMMENT_ID)).thenReturn(Optional.of(testComment));
-        doNothing().when(commentRepository).delete(TEST_COMMENT_ID);
+        doNothing().when(commentRepository).deleteById(TEST_COMMENT_ID);
 
         boolean result = commentService.deleteComment(TEST_COMMENT_ID);
 
         assertTrue(result);
         verify(commentRepository).findById(TEST_COMMENT_ID);
-        verify(commentRepository).delete(TEST_COMMENT_ID);
+        verify(commentRepository).deleteById(TEST_COMMENT_ID);
     }
 
     @Test
@@ -144,6 +138,6 @@ class CommentServiceImplTest {
 
         assertFalse(result);
         verify(commentRepository).findById(TEST_COMMENT_ID);
-        verify(commentRepository, never()).delete(anyLong());
+        verify(commentRepository, never()).deleteById(anyLong());
     }
 }

@@ -36,17 +36,12 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-
-
-
-
     implementation 'org.postgresql:postgresql:42.7.5'
     implementation 'com.google.code.gson:gson:2.12.1'
     implementation 'jakarta.persistence:jakarta.persistence-api:3.2.0'
 
 
 	// Testing ...
-	testImplementation 'com.h2database:h2'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     // Mockito

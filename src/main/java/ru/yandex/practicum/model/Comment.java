@@ -2,10 +2,14 @@ package ru.yandex.practicum.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
 
 @Getter
 @Setter
+@Table("comments")
 public class Comment {
+    @Id
     private Long id;
     private Long postId;
     private String text;

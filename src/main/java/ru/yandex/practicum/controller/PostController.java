@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -132,6 +133,12 @@ public class PostController {
     public ResponseEntity<String> likePost(@PathVariable Long id) {
         postService.likePost(id);
         return ResponseEntity.ok("Лайк добавлен");
+    }
+
+    @ResponseBody
+    @GetMapping(value = "/tags", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<String> getAllTags() {
+        return postService.getAllTags();
     }
 }
 
