@@ -10,6 +10,5 @@ public interface CommentService {
     Optional<Comment> findById(Long commentId);
     void addComment(Long postId, Comment comment);
     Optional<Comment> updateComment(Long commentId, Comment comment);
-
     boolean deleteComment(Long id);
 }

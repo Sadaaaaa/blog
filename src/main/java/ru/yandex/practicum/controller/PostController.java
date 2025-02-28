@@ -93,7 +93,7 @@ public class PostController {
             tagList = Arrays.asList(tags.replaceAll("\\s", "").split(","));
         }
 
-        Post savedPost = postService.addPost(title, text, tagList, image);
+        postService.addPost(title, text, tagList, image);
         return "redirect:/posts";
     }
 
@@ -119,7 +119,6 @@ public class PostController {
         return "redirect:/posts/" + id;
     }
 
-
     // Удаление поста
     @PostMapping("/delete/{id}")
     public String deletePost(@PathVariable Long id) {
@@ -135,6 +134,7 @@ public class PostController {
         return ResponseEntity.ok("Лайк добавлен");
     }
 
+    // Получение списка тегов
     @ResponseBody
     @GetMapping(value = "/tags", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<String> getAllTags() {

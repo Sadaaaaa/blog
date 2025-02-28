@@ -142,7 +142,8 @@
     <div th:each="comment : ${post.comments}" class="comment" th:id="'comment-' + ${comment.id}">
         <!-- Режим просмотра -->
         <div class="view-mode">
-            <p class="comment-text" th:utext="${comment.text}" th:onclick="'editCommentMode(' + ${comment.id} + ')'"></p>
+            <p class="comment-text" th:utext="${comment.text}"
+               th:onclick="'editCommentMode(' + ${comment.id} + ')'"></p>
             <div class="comment-actions">
                 <button th:onclick="'editCommentMode(' + ${comment.id} + ')'">✏️ Редактировать</button>
                 <button th:onclick="'deleteComment(' + ${comment.id} + ')'">🗑 Удалить</button>
@@ -181,7 +182,6 @@
         document.getElementById('edit-form').style.display = 'block';
     }
 
-    // отмена сохранения поста
     function cancelEdit() {
         let editForm = document.getElementById('edit-form');
         editForm.style.display = 'none';
@@ -225,10 +225,10 @@
 
         let tagsArray = tagsInput.value
             .split(',')
-            .map(tag => tag.trim()) // Убираем пробелы
-            .filter(tag => tag.length > 0); // Убираем пустые строки
+            .map(tag => tag.trim())
+            .filter(tag => tag.length > 0);
 
-        tagsHidden.value = JSON.stringify(tagsArray); // Отправляем JSON
+        tagsHidden.value = JSON.stringify(tagsArray);
     }
 
     // -------- КОММЕНТАРИИ --------
@@ -261,7 +261,6 @@
         const viewMode = commentElement.querySelector('.view-mode');
         const editMode = commentElement.querySelector('.edit-mode');
 
-        // Показываем режим редактирования, скрываем обычный режим
         viewMode.style.display = 'none';
         editMode.style.display = 'block';
 
@@ -283,11 +282,9 @@
             body: JSON.stringify({text})
         }).then(response => {
             if (response.ok) {
-                // Обновляем текст комментария без перезагрузки страницы
                 const viewModeText = commentElement.querySelector('.view-mode p');
                 viewModeText.textContent = text;
 
-                // Возвращаемся в режим просмотра
                 cancelEditComment(id);
             } else {
                 alert('Произошла ошибка при сохранении комментария');
@@ -304,12 +301,10 @@
         const viewMode = commentElement.querySelector('.view-mode');
         const editMode = commentElement.querySelector('.edit-mode');
 
-        // Возвращаем исходный текст в textarea (отменяем изменения)
         const viewModeText = commentElement.querySelector('.view-mode p').textContent;
         const editTextarea = document.getElementById('edit-text-' + id);
         editTextarea.value = viewModeText;
 
-        // Переключаем режимы отображения
         viewMode.style.display = 'block';
         editMode.style.display = 'none';
     }
@@ -335,6 +330,5 @@
         }
     });
 </script>
-
 </body>
 </html>

@@ -39,7 +39,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public Page<Post> getAllPosts(int page, int size, String tag) {
-        int totalElements = postRepository.count(tag); // Получаем общее количество записей
+        int totalElements = postRepository.count(tag);
         List<Post> posts = postRepository.findAll(page * size, size, tag);
 
         if (posts.isEmpty()) {

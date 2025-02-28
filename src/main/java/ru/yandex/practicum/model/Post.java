@@ -22,7 +22,6 @@ public class Post {
     private String text;
     private List<String> tags;
     private int likes;
-
     @Transient
     private List<Comment> comments;
     @Lob
